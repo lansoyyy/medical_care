@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:medical_care/firebase_options.dart';
 import 'package:medical_care/screens/home_screen.dart';
+import 'package:medical_care/screens/landing_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Medical Care',
-      home: HomeScreen(),
+      home: LandingScreen(),
     );
   }
 }

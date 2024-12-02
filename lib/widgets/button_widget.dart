@@ -16,12 +16,12 @@ class ButtonWidget extends StatelessWidget {
       {super.key,
       this.radius = 10,
       required this.label,
-      this.textColor = Colors.white,
+      this.textColor = Colors.black,
       required this.onPressed,
       this.width = 275,
       this.fontSize = 18,
       this.height = 50,
-      this.color = primary});
+      this.color = Colors.white});
   @override
   Widget build(BuildContext context) {
     return MaterialButton(
