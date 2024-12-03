@@ -100,7 +100,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     textColor: Colors.white,
                     color: Colors.green[400]!,
                     label: 'Add Medication',
-                    onPressed: () {},
+                    onPressed: () {
+                      medicationDialog();
+                    },
                   ),
                   const SizedBox(
                     width: 10,
@@ -170,4 +172,256 @@ class _HomeScreenState extends State<HomeScreen> {
     target: LatLng(37.42796133580664, -122.085749655962),
     zoom: 14.4746,
   );
+
+  medicationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Title
+                TextWidget(
+                  text: "Add a Medication",
+                  fontSize: 20,
+                  isBold: true,
+                  align: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+
+                // Section title
+                TextWidget(
+                  text: "Medical Information",
+                  fontSize: 16,
+                  isBold: true,
+                  align: TextAlign.start,
+                ),
+                const SizedBox(height: 16),
+
+                // Dropdown: Choose a Condition
+                _buildConditionDropdown("Choose a Condition"),
+
+                const SizedBox(height: 12),
+
+                // Dropdown: Choose a Medicine
+                _buildMedicineDropdown('Choose a Medicine'),
+
+                const SizedBox(height: 12),
+
+                // Input fields for duration and dosage
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildInputField("Duration (DD / MM / YY)"),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildInputField("Dosage"),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Section title
+                TextWidget(
+                  text: "Medical Reminder",
+                  fontSize: 16,
+                  isBold: true,
+                  align: TextAlign.start,
+                ),
+                const SizedBox(height: 16),
+
+                // Time and Date inputs
+                Row(
+                  children: [
+                    // Time Picker
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () async {
+                          TimeOfDay? pickedTime = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                          );
+                          if (pickedTime != null) {
+                            // Handle selected time
+                            print(
+                                "Selected Time: ${pickedTime.format(context)}");
+                          }
+                        },
+                        child: _buildPickerField(
+                            "00:00"), // Custom method for picker styling
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Date Picker
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () async {
+                          DateTime? pickedDate = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2000), // Earliest date allowed
+                            lastDate: DateTime(2100), // Latest date allowed
+                          );
+                          if (pickedDate != null) {
+                            // Handle selected date
+                            print(
+                                "Selected Date: ${pickedDate.toLocal().toString().split(' ')[0]}");
+                          }
+                        },
+                        child: _buildPickerField(
+                            "MM / DD"), // Custom method for picker styling
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // Notes field
+                _buildInputField("Enter your Notes here", maxLines: 4),
+
+                const SizedBox(height: 16),
+
+                // Save button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.lightGreenAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: TextWidget(
+                      text: "Save",
+                      fontSize: 16,
+                      color: Colors.black,
+                      isBold: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPickerField(String hintText) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            hintText,
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+          Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConditionDropdown(String hintText) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: DropdownButtonFormField<String>(
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+        ),
+        hint: Text(hintText),
+        items: const [
+          DropdownMenuItem(
+              value: "UTIs", child: Text("Urinary Tract Infections (UTIs)")),
+          DropdownMenuItem(
+              value: "Skin Infections", child: Text("Skin Infections")),
+          DropdownMenuItem(value: "Asthma", child: Text("Asthma")),
+          DropdownMenuItem(value: "Pneumonia", child: Text("Pneumonia")),
+          DropdownMenuItem(
+              value: "COPD",
+              child: Text("Chronic Obstructive Pulmonary Disease (COPD)")),
+          DropdownMenuItem(value: "Malaria", child: Text("Malaria")),
+          DropdownMenuItem(value: "Arthritis", child: Text("Arthritis")),
+          DropdownMenuItem(
+              value: "Heart Disease", child: Text("Heart Disease")),
+          DropdownMenuItem(value: "Hepatitis", child: Text("Hepatitis")),
+        ],
+        onChanged: (value) {
+          // Handle dropdown selection here
+          print("Selected Medicine: $value");
+        },
+      ),
+    );
+  }
+
+  // Helper method to create a dropdown with a medicine list
+  Widget _buildMedicineDropdown(String hintText) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: DropdownButtonFormField<String>(
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+        ),
+        hint: Text(hintText),
+        items: const [
+          DropdownMenuItem(value: "Paracetamol", child: Text("Paracetamol")),
+          DropdownMenuItem(value: "Ibuprofen", child: Text("Ibuprofen")),
+          DropdownMenuItem(value: "Amoxicillin", child: Text("Amoxicillin")),
+          DropdownMenuItem(
+              value: "Ciprofloxacin", child: Text("Ciprofloxacin")),
+          DropdownMenuItem(value: "Metformin", child: Text("Metformin")),
+          DropdownMenuItem(value: "Aspirin", child: Text("Aspirin")),
+          DropdownMenuItem(value: "Lisinopril", child: Text("Lisinopril")),
+          DropdownMenuItem(value: "Atorvastatin", child: Text("Atorvastatin")),
+          DropdownMenuItem(value: "Omeprazole", child: Text("Omeprazole")),
+          DropdownMenuItem(value: "Salbutamol", child: Text("Salbutamol")),
+        ],
+        onChanged: (value) {
+          // Handle dropdown selection here
+          print("Selected Medicine: $value");
+        },
+      ),
+    );
+  }
+
+  // Helper method to create an input field
+  Widget _buildInputField(String hintText, {int maxLines = 1}) {
+    return TextField(
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        hintText: hintText,
+        filled: true,
+        fillColor: Colors.grey[300],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
 }
