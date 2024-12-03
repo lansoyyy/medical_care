@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:medical_care/screens/chat_screen.dart';
 import 'package:medical_care/utils/colors.dart';
 import 'package:medical_care/widgets/button_widget.dart';
 import 'package:medical_care/widgets/text_widget.dart';
@@ -114,7 +115,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     textColor: Colors.white,
                     color: Colors.green[400]!,
                     label: 'Talk to a nurse',
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => const ChatScreen()));
+                    },
                   ),
                 ],
               ),
