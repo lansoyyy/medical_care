@@ -1,7 +1,9 @@
-import 'package:medical_care/services/chat_data.dart';
-import 'package:medical_care/widgets/drawer_widget.dart';
-import 'package:medical_care/widgets/text_widget.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:medical_care/utils/const.dart';
+
+import 'package:medical_care/widgets/text_widget.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -23,25 +25,56 @@ class _ChatScreenState extends State<ChatScreen> {
       });
 
       _getResponse(message);
-
       msg.clear();
     }
   }
 
-  void _getResponse(String question) {
-    String response =
-        'Sorry, I didn\'t understand the question. Please ask something else.';
-
-    for (var faq in faqData) {
-      if (faq['question']!.toLowerCase() == question.toLowerCase()) {
-        response = faq['answer']!;
-        break;
-      }
-    }
-
+  Future<void> _getResponse(String question) async {
     setState(() {
-      chatMessages.add({'sender': 'bot', 'message': response});
+      chatMessages.add({'sender': 'bot', 'message': 'Thinking...'});
     });
+
+    try {
+      final url = Uri.parse('https://api.openai.com/v1/chat/completions');
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $OPENAI_API_KEY',
+      };
+      final body = jsonEncode({
+        'model': 'gpt-3.5-turbo', // Replace with your preferred model
+        'messages': [
+          {'role': 'system', 'content': 'You are a helpful assistant.'},
+          {'role': 'user', 'content': question},
+        ],
+        'max_tokens': 256,
+      });
+
+      final response = await http.post(url, headers: headers, body: body);
+
+      print(response.statusCode);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final chatResponse = data['choices'][0]['message']['content'];
+
+        setState(() {
+          chatMessages.removeLast(); // Remove "Thinking..." message
+          chatMessages.add({'sender': 'bot', 'message': chatResponse.trim()});
+        });
+      } else {
+        setState(() {
+          chatMessages.removeLast(); // Remove "Thinking..." message
+          chatMessages.add(
+              {'sender': 'bot', 'message': 'Error: Unable to get a response.'});
+        });
+      }
+    } catch (e) {
+      setState(() {
+        chatMessages.removeLast(); // Remove "Thinking..." message
+        chatMessages
+            .add({'sender': 'bot', 'message': 'Error: ${e.toString()}'});
+      });
+    }
   }
 
   @override
