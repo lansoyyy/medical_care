@@ -38,8 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final url = Uri.parse('https://api.openai.com/v1/chat/completions');
       final headers = {
         'Content-Type': 'application/json',
-        'Authorization':
-            'Bearer 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',
+        'Authorization': 'Bearer $OPENAI_API_KEY',
       };
       final body = jsonEncode({
         'model': 'gpt-3.5-turbo', // Replace with your preferred model
