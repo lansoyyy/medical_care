@@ -1,9 +1,7 @@
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:medical_care/utils/const.dart';
-
+import 'package:medical_care/services/chat_data.dart';
+import 'package:medical_care/widgets/drawer_widget.dart';
 import 'package:medical_care/widgets/text_widget.dart';
+import 'package:flutter/material.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -25,56 +23,48 @@ class _ChatScreenState extends State<ChatScreen> {
       });
 
       _getResponse(message);
+
       msg.clear();
     }
   }
 
-  Future<void> _getResponse(String question) async {
-    setState(() {
-      chatMessages.add({'sender': 'bot', 'message': 'Thinking...'});
-    });
+  void _getResponse(String question) {
+    String response =
+        'Sorry, I didn\'t understand the question. Please ask something else.';
 
-    try {
-      final url = Uri.parse('https://api.openai.com/v1/chat/completions');
-      final headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $OPENAI_API_KEY',
-      };
-      final body = jsonEncode({
-        'model': 'gpt-3.5-turbo', // Replace with your preferred model
-        'messages': [
-          {'role': 'system', 'content': 'You are a helpful assistant.'},
-          {'role': 'user', 'content': question},
-        ],
-        'max_tokens': 256,
-      });
+    // Convert question to lowercase for case-insensitive matching
+    final questionLower = question.toLowerCase();
 
-      final response = await http.post(url, headers: headers, body: body);
+    // Use a Map to store matching scores
+    Map<String, int> matches = {};
 
-      print(response.statusCode);
+    for (var faq in faqData) {
+      // Split the question and FAQ question into words for partial matching
+      final questionWords =
+          faq['question']!.toLowerCase().split(RegExp(r'\W+'));
+      int score = 0;
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final chatResponse = data['choices'][0]['message']['content'];
-
-        setState(() {
-          chatMessages.removeLast(); // Remove "Thinking..." message
-          chatMessages.add({'sender': 'bot', 'message': chatResponse.trim()});
-        });
-      } else {
-        setState(() {
-          chatMessages.removeLast(); // Remove "Thinking..." message
-          chatMessages.add(
-              {'sender': 'bot', 'message': 'Error: Unable to get a response.'});
-        });
+      for (var word in questionLower.split(RegExp(r'\W+'))) {
+        if (questionWords.contains(word)) {
+          score++;
+        }
       }
-    } catch (e) {
-      setState(() {
-        chatMessages.removeLast(); // Remove "Thinking..." message
-        chatMessages
-            .add({'sender': 'bot', 'message': 'Error: ${e.toString()}'});
-      });
+      matches[faq['question']!] = score;
     }
+
+    // Find the question with the highest score
+    final bestMatch =
+        matches.entries.reduce((a, b) => a.value > b.value ? a : b);
+
+    if (bestMatch.value > 0) {
+      // If a match is found, get the corresponding answer
+      response = faqData
+          .firstWhere((faq) => faq['question'] == bestMatch.key)['answer']!;
+    }
+
+    setState(() {
+      chatMessages.add({'sender': 'bot', 'message': response});
+    });
   }
 
   @override
