@@ -57,155 +57,227 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _showMedicationReminder(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Colors.white,
+          contentPadding: EdgeInsets.zero,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Image or Icon at the top
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+                child: Image.network(
+                  'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Replace with your own image
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Text(
+                      'Medication Reminder',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'It\'s time to take your medication. Don\'t forget to stay on track with your health!',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black54,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              Divider(height: 1, color: Colors.grey[300]),
+              Row(
+                children: [
+                  Container(
+                    height: 50,
+                    width: 1,
+                    color: Colors.grey[300],
+                  ),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        // Add functionality for "Mark as Taken" here
+                      },
+                      child: const Text(
+                        'Close',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: primary,
       body: hasLoaded
-          ? Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: Image.asset(
-                        'assets/images/logo.png',
-                        height: 125,
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
+          ? StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('Events')
+                  .where('day', isEqualTo: DateTime.now().day)
+                  .where('month', isEqualTo: DateTime.now().month)
+                  .where('year', isEqualTo: DateTime.now().year)
+                  .snapshots(),
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> snapshot) {
+                if (snapshot.hasError) {
+                  print(snapshot.error);
+                  return const Center(child: Text('Error'));
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.only(top: 50),
+                    child: Center(
+                        child: CircularProgressIndicator(
+                      color: Colors.black,
+                    )),
+                  );
+                }
+
+                final data = snapshot.requireData;
+                if (data.docs.isNotEmpty) {
+                  WidgetsBinding.instance.addPostFrameCallback(
+                    (timeStamp) {
+                      _showMedicationReminder(context);
+                    },
+                  );
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        TextWidget(
-                          text: 'Calendar',
-                          fontSize: 28,
-                          fontFamily: 'Bold',
-                        ),
-                        const Expanded(
-                          child: SizedBox(
-                            height: 10,
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            height: 125,
                           ),
                         ),
-                        ButtonWidget(
-                          color: index == 0 ? Colors.green : Colors.white,
-                          height: 25,
-                          width: 75,
-                          fontSize: 12,
-                          label: 'Month',
-                          onPressed: () {
-                            setState(() {
-                              index = 0;
-                            });
-                          },
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        ButtonWidget(
-                          color: index == 1 ? Colors.green : Colors.white,
-                          height: 25,
-                          width: 75,
-                          fontSize: 12,
-                          label: 'Week',
-                          onPressed: () {
-                            setState(() {
-                              index = 1;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Container(
-                      width: double.infinity,
-                      height: 275,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: index == 0
-                          ? MonthView(
-                              controller: cont,
-                              onEventTap: (event, date) async {
-                                await FirebaseFirestore.instance
-                                    .collection('Events')
-                                    .where('day', isEqualTo: date.day)
-                                    .where('month', isEqualTo: date.month)
-                                    .where('year', isEqualTo: date.year)
-                                    .get()
-                                    .then((QuerySnapshot querySnapshot) {
-                                  medicationInfoDialog(
-                                      querySnapshot.docs.first);
-                                });
-                              },
-                            )
-                          : WeekView(
-                              controller: cont,
-                              onEventTap: (event, date) async {
-                                await FirebaseFirestore.instance
-                                    .collection('Events')
-                                    .where('day', isEqualTo: date.day)
-                                    .where('month', isEqualTo: date.month)
-                                    .where('year', isEqualTo: date.year)
-                                    .get()
-                                    .then((QuerySnapshot querySnapshot) {
-                                  medicationInfoDialog(
-                                      querySnapshot.docs.first);
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            TextWidget(
+                              text: 'Calendar',
+                              fontSize: 28,
+                              fontFamily: 'Bold',
+                            ),
+                            const Expanded(
+                              child: SizedBox(
+                                height: 10,
+                              ),
+                            ),
+                            ButtonWidget(
+                              color: index == 0 ? Colors.green : Colors.white,
+                              height: 25,
+                              width: 75,
+                              fontSize: 12,
+                              label: 'Month',
+                              onPressed: () {
+                                setState(() {
+                                  index = 0;
                                 });
                               },
                             ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ButtonWidget(
-                          height: 40,
-                          width: 125,
-                          fontSize: 13,
-                          textColor: Colors.white,
-                          color: Colors.green[400]!,
-                          label: 'Add Medication',
-                          onPressed: () {
-                            medicationDialog();
-                          },
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            ButtonWidget(
+                              color: index == 1 ? Colors.green : Colors.white,
+                              height: 25,
+                              width: 75,
+                              fontSize: 12,
+                              label: 'Week',
+                              onPressed: () {
+                                setState(() {
+                                  index = 1;
+                                });
+                              },
+                            ),
+                          ],
                         ),
                         const SizedBox(
-                          width: 10,
+                          height: 10,
                         ),
-                        ButtonWidget(
-                          height: 40,
-                          width: 125,
-                          fontSize: 13,
-                          textColor: Colors.white,
-                          color: Colors.green[400]!,
-                          label: 'Talk to a nurse',
-                          onPressed: () {
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => const ChatScreen()));
-                          },
+                        Container(
+                          width: double.infinity,
+                          height: 275,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: index == 0
+                              ? MonthView(
+                                  controller: cont,
+                                  onEventTap: (event, date) async {
+                                    await FirebaseFirestore.instance
+                                        .collection('Events')
+                                        .where('day', isEqualTo: date.day)
+                                        .where('month', isEqualTo: date.month)
+                                        .where('year', isEqualTo: date.year)
+                                        .get()
+                                        .then((QuerySnapshot querySnapshot) {
+                                      medicationInfoDialog(
+                                          querySnapshot.docs.first);
+                                    });
+                                  },
+                                )
+                              : WeekView(
+                                  controller: cont,
+                                  onEventTap: (event, date) async {
+                                    await FirebaseFirestore.instance
+                                        .collection('Events')
+                                        .where('day', isEqualTo: date.day)
+                                        .where('month', isEqualTo: date.month)
+                                        .where('year', isEqualTo: date.year)
+                                        .get()
+                                        .then((QuerySnapshot querySnapshot) {
+                                      medicationInfoDialog(
+                                          querySnapshot.docs.first);
+                                    });
+                                  },
+                                ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Container(
-                      width: double.infinity,
-                      height: 275,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ButtonWidget(
                               height: 40,
@@ -213,30 +285,74 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontSize: 13,
                               textColor: Colors.white,
                               color: Colors.green[400]!,
-                              label: 'Locate Drugstore',
-                              onPressed: () {},
+                              label: 'Add Medication',
+                              onPressed: () {
+                                medicationDialog();
+                              },
                             ),
                             const SizedBox(
-                              height: 10,
+                              width: 10,
                             ),
-                            Expanded(
-                              child: GoogleMap(
-                                zoomControlsEnabled: false,
-                                mapType: MapType.normal,
-                                initialCameraPosition: _kGooglePlex,
-                                onMapCreated: (GoogleMapController controller) {
-                                  _controller.complete(controller);
-                                },
-                              ),
-                            )
+                            ButtonWidget(
+                              height: 40,
+                              width: 125,
+                              fontSize: 13,
+                              textColor: Colors.white,
+                              color: Colors.green[400]!,
+                              label: 'Talk to a nurse',
+                              onPressed: () {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => const ChatScreen()));
+                              },
+                            ),
                           ],
                         ),
-                      ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        Container(
+                          width: double.infinity,
+                          height: 275,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Column(
+                              children: [
+                                ButtonWidget(
+                                  height: 40,
+                                  width: 125,
+                                  fontSize: 13,
+                                  textColor: Colors.white,
+                                  color: Colors.green[400]!,
+                                  label: 'Locate Drugstore',
+                                  onPressed: () {},
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Expanded(
+                                  child: GoogleMap(
+                                    zoomControlsEnabled: false,
+                                    mapType: MapType.normal,
+                                    initialCameraPosition: _kGooglePlex,
+                                    onMapCreated:
+                                        (GoogleMapController controller) {
+                                      _controller.complete(controller);
+                                    },
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            )
+                  ),
+                );
+              })
           : const Center(
               child: CircularProgressIndicator(),
             ),
