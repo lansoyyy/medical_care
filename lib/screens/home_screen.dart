@@ -128,8 +128,36 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: index == 0
-                          ? MonthView(controller: cont)
-                          : const WeekView(),
+                          ? MonthView(
+                              controller: cont,
+                              onEventTap: (event, date) async {
+                                await FirebaseFirestore.instance
+                                    .collection('Events')
+                                    .where('day', isEqualTo: date.day)
+                                    .where('month', isEqualTo: date.month)
+                                    .where('year', isEqualTo: date.year)
+                                    .get()
+                                    .then((QuerySnapshot querySnapshot) {
+                                  medicationInfoDialog(
+                                      querySnapshot.docs.first);
+                                });
+                              },
+                            )
+                          : WeekView(
+                              controller: cont,
+                              onEventTap: (event, date) async {
+                                await FirebaseFirestore.instance
+                                    .collection('Events')
+                                    .where('day', isEqualTo: date.day)
+                                    .where('month', isEqualTo: date.month)
+                                    .where('year', isEqualTo: date.year)
+                                    .get()
+                                    .then((QuerySnapshot querySnapshot) {
+                                  medicationInfoDialog(
+                                      querySnapshot.docs.first);
+                                });
+                              },
+                            ),
                     ),
                     const SizedBox(
                       height: 20,
@@ -387,6 +415,154 @@ class _HomeScreenState extends State<HomeScreen> {
                         text: "Save",
                         fontSize: 16,
                         color: Colors.black,
+                        isBold: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  medicationInfoDialog(data) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          child: StatefulBuilder(builder: (context, setState) {
+            return Container(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+
+                  // Section title
+                  TextWidget(
+                    text: "Medical Information",
+                    fontSize: 24,
+                    isBold: true,
+                    align: TextAlign.start,
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Dropdown: Choose a Condition
+
+                  TextWidget(
+                    text: 'Condition',
+                    fontSize: 12,
+                    align: TextAlign.start,
+                  ),
+                  TextWidget(
+                    text: data['condition'],
+                    fontSize: 16,
+                    isBold: true,
+                    align: TextAlign.start,
+                  ),
+
+                  const SizedBox(height: 12),
+                  TextWidget(
+                    text: 'Medicine',
+                    fontSize: 12,
+                    align: TextAlign.start,
+                  ),
+                  // Dropdown: Choose a Medicine
+                  TextWidget(
+                    text: data['medicine'],
+                    fontSize: 16,
+                    isBold: true,
+                    align: TextAlign.start,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Input fields for duration and dosage
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextWidget(
+                            text: 'Duration',
+                            fontSize: 12,
+                            align: TextAlign.start,
+                          ),
+                          TextWidget(
+                            text: data['duration'],
+                            fontSize: 16,
+                            isBold: true,
+                            align: TextAlign.start,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextWidget(
+                            text: 'Dosage',
+                            fontSize: 12,
+                            align: TextAlign.start,
+                          ),
+                          TextWidget(
+                            text: data['dosage'],
+                            fontSize: 16,
+                            isBold: true,
+                            align: TextAlign.start,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Notes field
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextWidget(
+                        text: 'Medication Notes',
+                        fontSize: 12,
+                        align: TextAlign.start,
+                      ),
+                      TextWidget(
+                        text: data['notes'],
+                        fontSize: 16,
+                        isBold: true,
+                        align: TextAlign.start,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Save button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: TextWidget(
+                        text: "Close",
+                        fontSize: 16,
+                        color: Colors.white,
                         isBold: true,
                       ),
                     ),
