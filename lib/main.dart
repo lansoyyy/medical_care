@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
       controller: EventController(),
       child: const MaterialApp(
         title: 'Medical Care',
-        home: HomeScreen(),
+        home: LandingScreen(),
       ),
     );
   }
