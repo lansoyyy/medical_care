@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:calendar_view/calendar_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:medical_care/screens/chat_screen.dart';
 import 'package:medical_care/services/add_event.dart';
 import 'package:medical_care/utils/colors.dart';
+import 'package:medical_care/utils/const.dart';
 import 'package:medical_care/widgets/button_widget.dart';
 import 'package:medical_care/widgets/text_widget.dart';
 
@@ -21,7 +23,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    getEvents();
+
+    getPharmacy().whenComplete(
+      () {
+        getEvents();
+      },
+    );
   }
 
   int index = 0;
@@ -29,6 +36,31 @@ class _HomeScreenState extends State<HomeScreen> {
   final cont = EventController();
 
   bool hasLoaded = false;
+
+  Set<Marker> markers = {};
+
+  Future getPharmacy() async {
+    await FirebaseFirestore.instance
+        .collection('Pharmacy')
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      for (int i = 0; i < querySnapshot.docs.length; i++) {
+        setState(() {
+          markers.add(
+            Marker(
+              markerId: MarkerId(querySnapshot.docs[i].id),
+              position: LatLng(querySnapshot.docs[i]['latitude'],
+                  querySnapshot.docs[i]['longitude']),
+              infoWindow: InfoWindow(
+                title: querySnapshot.docs[i]['name'],
+                snippet: querySnapshot.docs[i]['address'],
+              ),
+            ),
+          );
+        });
+      }
+    });
+  }
 
   getEvents() async {
     await FirebaseFirestore.instance
@@ -171,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (data.docs.isNotEmpty) {
                   WidgetsBinding.instance.addPostFrameCallback(
                     (timeStamp) {
-                      _showMedicationReminder(context);
+                      // _showMedicationReminder(context);
                     },
                   );
                 }
@@ -300,7 +332,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               textColor: Colors.white,
                               color: Colors.green[400]!,
                               label: 'Talk to a nurse',
-                              onPressed: () {
+                              onPressed: () async {
+                                // for (int i = 0; i < brgys.length; i++) {
+                                //   await FirebaseFirestore.instance
+                                //       .collection('Pharmacy')
+                                //       .doc()
+                                //       .set(brgys[i]);
+                                // }
                                 Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) => const ChatScreen()));
                               },
@@ -328,15 +366,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                   textColor: Colors.white,
                                   color: Colors.green[400]!,
                                   label: 'Locate Drugstore',
-                                  onPressed: () {},
+                                  onPressed: () async {
+                                    final random = Random();
+                                    int randomNumber = random.nextInt(31);
+
+                                    final GoogleMapController controller =
+                                        await _controller.future;
+
+                                    await controller.animateCamera(
+                                        CameraUpdate.newCameraPosition(
+                                            CameraPosition(
+                                                bearing: 192.8334901395799,
+                                                target: LatLng(
+                                                    brgys[randomNumber]
+                                                        ['latitude'],
+                                                    brgys[randomNumber]
+                                                        ['longitude']),
+                                                tilt: 59.440717697143555,
+                                                zoom: 19.151926040649414)));
+                                  },
                                 ),
                                 const SizedBox(
                                   height: 10,
                                 ),
                                 Expanded(
                                   child: GoogleMap(
-                                    zoomControlsEnabled: false,
+                                    zoomControlsEnabled: true,
                                     mapType: MapType.normal,
+                                    markers: markers,
                                     initialCameraPosition: _kGooglePlex,
                                     onMapCreated:
                                         (GoogleMapController controller) {
@@ -363,7 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Completer<GoogleMapController>();
 
   static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
+    target: LatLng(10.305644212839677, 123.89540050171668),
     zoom: 14.4746,
   );
 
