@@ -405,6 +405,21 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
+                        const SizedBox(
+                          height: 50,
+                        ),
+                        Container(
+                          height: 30,
+                          width: double.infinity,
+                          color: Colors.white,
+                          child: Center(
+                            child: TextWidget(
+                              text: 'Powered by Apexel Development',
+                              fontSize: 11,
+                              fontFamily: 'Medium',
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
