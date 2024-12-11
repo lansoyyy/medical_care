@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:medical_care/screens/auth/login_screen.dart';
-import 'package:medical_care/screens/auth/signup_screen.dart';
-import 'package:medical_care/screens/home_screen.dart';
 import 'package:medical_care/services/add_user.dart';
 import 'package:medical_care/utils/colors.dart';
 import 'package:medical_care/widgets/button_widget.dart';
@@ -89,10 +87,10 @@ class _SignupScreenState extends State<SignupScreen> {
 
   register(context) async {
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final user = await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: email.text, password: password.text);
 
-      addUser(name.text, email.text);
+      addUser(name.text, email.text, user.user!.uid);
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const LoginScreen()),

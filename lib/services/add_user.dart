@@ -1,9 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:medical_care/utils/const.dart';
-
-Future addUser(name, email) async {
+Future addUser(name, email, userId) async {
   final docUser = FirebaseFirestore.instance.collection('Users').doc(userId);
 
   final json = {
